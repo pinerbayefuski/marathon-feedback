@@ -1,0 +1,968 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>训练反馈 · 马拉松跑者</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Noto+Sans+SC:wght@300;400;500;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --orange: #E8521A;
+  --orange-dim: rgba(232,82,26,0.10);
+  --orange-glow: rgba(232,82,26,0.25);
+  --bg: #0e0c0a;
+  --surface: #181410;
+  --surface2: #201c18;
+  --border: rgba(255,255,255,0.07);
+  --border-active: rgba(232,82,26,0.5);
+  --text: #f0ece4;
+  --text-mid: #9a8f84;
+  --text-dim: #5a5248;
+  --green: #4CAF7D;
+  --green-dim: rgba(76,175,125,0.12);
+  --yellow: #D4A843;
+  --yellow-dim: rgba(212,168,67,0.12);
+  --red: #E05555;
+  --red-dim: rgba(224,85,85,0.12);
+}
+
+* { margin:0; padding:0; box-sizing:border-box; }
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'Noto Sans SC', sans-serif;
+  min-height: 100vh;
+  padding-bottom: 80px;
+}
+
+/* ─── HERO ─── */
+.hero {
+  background: linear-gradient(135deg, #1a0e08 0%, #0e0c0a 60%);
+  border-bottom: 1px solid var(--border);
+  padding: 48px 0 36px;
+  position: relative;
+  overflow: hidden;
+}
+.hero::before {
+  content: 'FEEDBACK';
+  position: absolute;
+  right: -20px; top: 50%;
+  transform: translateY(-50%);
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 160px;
+  color: rgba(232,82,26,0.05);
+  letter-spacing: 6px;
+  pointer-events: none;
+  line-height: 1;
+  white-space: nowrap;
+}
+.hero-inner {
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 0 28px;
+}
+.hero-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 10px;
+  letter-spacing: 2.5px;
+  text-transform: uppercase;
+  color: var(--orange);
+  border: 1px solid var(--orange-glow);
+  background: var(--orange-dim);
+  padding: 5px 12px;
+  border-radius: 2px;
+  margin-bottom: 18px;
+}
+.hero-tag::before {
+  content: '';
+  width: 6px; height: 6px;
+  background: var(--orange);
+  border-radius: 50%;
+  animation: pulse 2s infinite;
+}
+@keyframes pulse {
+  0%,100%{opacity:1;transform:scale(1);}
+  50%{opacity:0.4;transform:scale(0.7);}
+}
+.hero h1 {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 52px;
+  letter-spacing: 3px;
+  line-height: 1;
+  margin-bottom: 10px;
+}
+.hero h1 span { color: var(--orange); }
+.hero-sub {
+  font-size: 13px;
+  color: var(--text-mid);
+  font-weight: 300;
+  line-height: 1.6;
+  max-width: 480px;
+}
+
+/* ─── PROGRESS BAR ─── */
+.progress-wrap {
+  max-width: 720px;
+  margin: 32px auto 0;
+  padding: 0 28px;
+}
+.progress-steps {
+  display: flex;
+  align-items: center;
+  gap: 0;
+}
+.step-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 1;
+  cursor: pointer;
+}
+.step-item:last-child { flex: 0; }
+.step-circle {
+  width: 28px; height: 28px;
+  border-radius: 50%;
+  border: 2px solid var(--border);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--text-dim);
+  transition: all 0.3s;
+  flex-shrink: 0;
+  background: var(--surface);
+}
+.step-item.active .step-circle {
+  border-color: var(--orange);
+  background: var(--orange);
+  color: #fff;
+}
+.step-item.done .step-circle {
+  border-color: var(--green);
+  background: var(--green-dim);
+  color: var(--green);
+}
+.step-label {
+  font-size: 10px;
+  color: var(--text-dim);
+  letter-spacing: 0.5px;
+  white-space: nowrap;
+  transition: color 0.3s;
+}
+.step-item.active .step-label { color: var(--orange); }
+.step-item.done .step-label { color: var(--green); }
+.step-line {
+  flex: 1;
+  height: 1px;
+  background: var(--border);
+  margin: 0 8px;
+  transition: background 0.3s;
+}
+.step-line.done { background: var(--green); }
+
+/* ─── MAIN CONTENT ─── */
+.main {
+  max-width: 720px;
+  margin: 36px auto 0;
+  padding: 0 28px;
+}
+
+/* ─── SECTION CARD ─── */
+.section-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  margin-bottom: 20px;
+  overflow: hidden;
+  display: none;
+  animation: fadeUp 0.35s ease both;
+}
+.section-card.active { display: block; }
+@keyframes fadeUp {
+  from { opacity:0; transform:translateY(14px); }
+  to   { opacity:1; transform:translateY(0); }
+}
+
+.card-header {
+  padding: 20px 28px 16px;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+.card-icon {
+  width: 36px; height: 36px;
+  border-radius: 8px;
+  background: var(--orange-dim);
+  border: 1px solid var(--orange-glow);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 17px;
+}
+.card-title {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 22px;
+  letter-spacing: 2px;
+  color: var(--text);
+}
+.card-subtitle {
+  font-size: 11px;
+  color: var(--text-mid);
+  margin-top: 1px;
+  font-weight: 300;
+}
+.card-body { padding: 24px 28px; }
+
+/* ─── FORM ELEMENTS ─── */
+.field-group { margin-bottom: 22px; }
+.field-group:last-child { margin-bottom: 0; }
+
+.field-label {
+  font-size: 11px;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  color: var(--text-mid);
+  margin-bottom: 8px;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.field-label .req { color: var(--orange); font-size: 13px; }
+
+.field-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+}
+
+input[type="text"],
+input[type="number"],
+textarea,
+select {
+  width: 100%;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  color: var(--text);
+  font-family: 'Noto Sans SC', sans-serif;
+  font-size: 13px;
+  padding: 11px 14px;
+  outline: none;
+  transition: border-color 0.2s, box-shadow 0.2s;
+  -webkit-appearance: none;
+}
+input:focus, textarea:focus, select:focus {
+  border-color: var(--orange);
+  box-shadow: 0 0 0 3px var(--orange-dim);
+}
+input::placeholder, textarea::placeholder { color: var(--text-dim); }
+textarea { resize: vertical; min-height: 90px; line-height: 1.6; }
+select option { background: #201c18; }
+
+/* ─── RATING STARS ─── */
+.rating-group { margin-bottom: 22px; }
+.star-row {
+  display: flex;
+  gap: 6px;
+  margin-top: 8px;
+}
+.star {
+  width: 36px; height: 36px;
+  border-radius: 4px;
+  border: 1px solid var(--border);
+  background: var(--surface2);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 18px;
+  cursor: pointer;
+  transition: all 0.15s;
+  user-select: none;
+}
+.star:hover, .star.active { background: var(--orange-dim); border-color: var(--orange-glow); transform: scale(1.1); }
+.rating-label {
+  font-size: 11px;
+  color: var(--text-dim);
+  margin-top: 7px;
+}
+
+/* ─── TOGGLE CHIPS ─── */
+.toggle-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 8px;
+}
+.toggle-chip {
+  padding: 7px 16px;
+  border-radius: 3px;
+  border: 1px solid var(--border);
+  background: var(--surface2);
+  color: var(--text-mid);
+  font-size: 12px;
+  cursor: pointer;
+  transition: all 0.15s;
+  user-select: none;
+}
+.toggle-chip:hover { border-color: var(--orange-glow); color: var(--text); }
+.toggle-chip.selected {
+  background: var(--orange-dim);
+  border-color: var(--orange);
+  color: var(--orange);
+  font-weight: 500;
+}
+
+/* ─── SLIDER ─── */
+.slider-wrap { margin-top: 10px; }
+input[type="range"] {
+  -webkit-appearance: none;
+  width: 100%;
+  height: 4px;
+  border-radius: 2px;
+  background: var(--surface2);
+  border: none;
+  outline: none;
+  padding: 0;
+  box-shadow: none;
+}
+input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 18px; height: 18px;
+  border-radius: 50%;
+  background: var(--orange);
+  cursor: pointer;
+  box-shadow: 0 0 8px var(--orange-glow);
+}
+.slider-labels {
+  display: flex;
+  justify-content: space-between;
+  font-size: 10px;
+  color: var(--text-dim);
+  margin-top: 6px;
+  letter-spacing: 0.5px;
+}
+.slider-value {
+  text-align: center;
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 32px;
+  color: var(--orange);
+  margin-top: 4px;
+  letter-spacing: 2px;
+}
+
+/* ─── SESSION CHECK ─── */
+.session-checks { display: flex; flex-direction: column; gap: 10px; margin-top: 8px; }
+.session-check {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 12px 16px;
+  cursor: pointer;
+  transition: border-color 0.2s;
+}
+.session-check:hover { border-color: var(--orange-glow); }
+.session-check.checked { border-color: var(--green); background: var(--green-dim); }
+.check-box {
+  width: 20px; height: 20px;
+  border-radius: 4px;
+  border: 2px solid var(--border);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 12px;
+  flex-shrink: 0;
+  transition: all 0.15s;
+}
+.session-check.checked .check-box {
+  background: var(--green);
+  border-color: var(--green);
+}
+.check-info { flex: 1; }
+.check-title { font-size: 13px; font-weight: 500; color: var(--text); }
+.check-meta { font-size: 11px; color: var(--text-mid); margin-top: 2px; }
+
+/* ─── NAV BUTTONS ─── */
+.nav-row {
+  display: flex;
+  gap: 12px;
+  margin-top: 28px;
+  justify-content: flex-end;
+}
+.btn {
+  font-family: 'Noto Sans SC', sans-serif;
+  font-size: 13px;
+  padding: 11px 28px;
+  border-radius: 4px;
+  border: none;
+  cursor: pointer;
+  font-weight: 500;
+  letter-spacing: 0.5px;
+  transition: all 0.2s;
+}
+.btn-back {
+  background: transparent;
+  color: var(--text-mid);
+  border: 1px solid var(--border);
+}
+.btn-back:hover { border-color: var(--text-mid); color: var(--text); }
+.btn-next {
+  background: var(--orange);
+  color: #fff;
+  min-width: 120px;
+}
+.btn-next:hover { background: #d04610; box-shadow: 0 4px 16px var(--orange-glow); }
+.btn-submit {
+  background: var(--green);
+  color: #fff;
+  min-width: 160px;
+}
+.btn-submit:hover { background: #3a9a68; }
+
+/* ─── SUMMARY PAGE ─── */
+#summary-page { display: none; }
+#summary-page.active { display: block; animation: fadeUp 0.4s ease both; }
+
+.summary-hero {
+  text-align: center;
+  padding: 48px 28px 32px;
+}
+.summary-check {
+  width: 64px; height: 64px;
+  border-radius: 50%;
+  background: var(--green-dim);
+  border: 2px solid var(--green);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 28px;
+  margin: 0 auto 20px;
+}
+.summary-hero h2 {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 36px;
+  letter-spacing: 2px;
+  margin-bottom: 8px;
+}
+.summary-hero p { font-size: 13px; color: var(--text-mid); }
+
+.summary-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  padding: 0 28px 28px;
+}
+.summary-card {
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 18px 20px;
+}
+.summary-card-title {
+  font-size: 10px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--text-dim);
+  margin-bottom: 12px;
+  font-weight: 500;
+}
+.summary-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  padding: 7px 0;
+  border-bottom: 1px solid var(--border);
+  gap: 10px;
+}
+.summary-item:last-child { border-bottom: none; }
+.summary-key { font-size: 11px; color: var(--text-mid); flex-shrink: 0; }
+.summary-val { font-size: 12px; color: var(--text); font-weight: 500; text-align: right; }
+
+.print-btn-row {
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+  padding: 0 28px 36px;
+}
+
+/* ─── FOOTER ─── */
+.page-footer {
+  text-align: center;
+  padding: 32px 28px 0;
+  font-size: 11px;
+  color: var(--text-dim);
+  letter-spacing: 1px;
+}
+
+@media (max-width: 600px) {
+  .field-row { grid-template-columns: 1fr; }
+  .summary-grid { grid-template-columns: 1fr; }
+  .hero h1 { font-size: 38px; }
+  .hero::before { display: none; }
+  .step-label { display: none; }
+}
+
+@media print {
+  body { background: #fff; color: #111; }
+  .hero, .progress-wrap, .nav-row, .print-btn-row { display: none !important; }
+  .summary-card { border: 1px solid #ddd; background: #fafafa; }
+  .summary-key, .summary-val { color: #333; }
+}
+</style>
+</head>
+<body>
+
+<!-- HERO -->
+<div class="hero">
+  <div class="hero-inner">
+    <div class="hero-tag">训练反馈系统</div>
+    <h1>跑者<span>反馈</span>表</h1>
+    <p class="hero-sub">请如实填写本周训练感受与身体状态，帮助教练为你优化下阶段计划。填写约需 3 分钟。</p>
+  </div>
+</div>
+
+<!-- PROGRESS -->
+<div class="progress-wrap">
+  <div class="progress-steps">
+    <div class="step-item active" id="step-1" onclick="goStep(1)">
+      <div class="step-circle">1</div>
+      <div class="step-label">基本信息</div>
+    </div>
+    <div class="step-line" id="line-1"></div>
+    <div class="step-item" id="step-2" onclick="goStep(2)">
+      <div class="step-circle">2</div>
+      <div class="step-label">训练完成</div>
+    </div>
+    <div class="step-line" id="line-2"></div>
+    <div class="step-item" id="step-3" onclick="goStep(3)">
+      <div class="step-circle">3</div>
+      <div class="step-label">身体感受</div>
+    </div>
+    <div class="step-line" id="line-3"></div>
+    <div class="step-item" id="step-4" onclick="goStep(4)">
+      <div class="step-circle">4</div>
+      <div class="step-label">饮食记录</div>
+    </div>
+    <div class="step-line" id="line-4"></div>
+    <div class="step-item" id="step-5">
+      <div class="step-circle">✓</div>
+      <div class="step-label">完成</div>
+    </div>
+  </div>
+</div>
+
+<div class="main">
+
+  <!-- ══ STEP 1: 基本信息 ══ -->
+  <div class="section-card active" id="card-1">
+    <div class="card-header">
+      <div class="card-icon">👤</div>
+      <div>
+        <div class="card-title">基本信息确认</div>
+        <div class="card-subtitle">确认或更新你的最新体征数据</div>
+      </div>
+    </div>
+    <div class="card-body">
+      <div class="field-row">
+        <div class="field-group">
+          <div class="field-label">反馈日期 <span class="req">*</span></div>
+          <input type="text" id="f-date" placeholder="例：2025年5月17日">
+        </div>
+        <div class="field-group">
+          <div class="field-label">当前体重 (kg)</div>
+          <input type="number" id="f-weight" placeholder="例：54.2" step="0.1" min="30" max="150">
+        </div>
+      </div>
+      <div class="field-row">
+        <div class="field-group">
+          <div class="field-label">晨起静息心率 (bpm)</div>
+          <input type="number" id="f-rhr" placeholder="例：52" min="30" max="120">
+        </div>
+        <div class="field-group">
+          <div class="field-label">睡眠质量</div>
+          <select id="f-sleep">
+            <option value="">请选择</option>
+            <option value="很差（不足5小时）">很差（不足5小时）</option>
+            <option value="较差（5~6小时）">较差（5~6小时）</option>
+            <option value="一般（6~7小时）">一般（6~7小时）</option>
+            <option value="良好（7~8小时）">良好（7~8小时）</option>
+            <option value="优秀（8小时以上）">优秀（8小时以上）</option>
+          </select>
+        </div>
+      </div>
+      <div class="field-group">
+        <div class="field-label">整体精力状态</div>
+        <div class="toggle-chips" id="chips-energy">
+          <div class="toggle-chip" onclick="selectChip(this,'chips-energy')">😴 很疲惫</div>
+          <div class="toggle-chip" onclick="selectChip(this,'chips-energy')">😐 一般</div>
+          <div class="toggle-chip" onclick="selectChip(this,'chips-energy')">🙂 状态不错</div>
+          <div class="toggle-chip" onclick="selectChip(this,'chips-energy')">💪 精力充沛</div>
+        </div>
+      </div>
+    </div>
+    <div class="nav-row" style="padding:0 28px 24px;">
+      <button class="btn btn-next" onclick="goStep(2)">下一步 →</button>
+    </div>
+  </div>
+
+  <!-- ══ STEP 2: 训练完成情况 ══ -->
+  <div class="section-card" id="card-2">
+    <div class="card-header">
+      <div class="card-icon">📅</div>
+      <div>
+        <div class="card-title">训练完成情况</div>
+        <div class="card-subtitle">勾选本周已完成的训练课，并填写实际数据</div>
+      </div>
+    </div>
+    <div class="card-body">
+      <div class="field-group">
+        <div class="field-label">本周训练课打卡</div>
+        <div class="session-checks">
+          <div class="session-check" id="sc-1" onclick="toggleCheck('sc-1')">
+            <div class="check-box" id="cb-1"></div>
+            <div class="check-info">
+              <div class="check-title">5月17日 · 长距离慢跑 9K</div>
+              <div class="check-meta">计划配速 6'40" · 有氧基础课</div>
+            </div>
+          </div>
+          <div class="session-check" id="sc-2" onclick="toggleCheck('sc-2')">
+            <div class="check-box" id="cb-2"></div>
+            <div class="check-info">
+              <div class="check-title">5月19日 · 节奏跑 5K</div>
+              <div class="check-meta">计划配速 5'50" · 乳酸阈训练</div>
+            </div>
+          </div>
+          <div class="session-check" id="sc-3" onclick="toggleCheck('sc-3')">
+            <div class="check-box" id="cb-3"></div>
+            <div class="check-info">
+              <div class="check-title">5月31日 · 慢跑恢复 7K</div>
+              <div class="check-meta">计划配速 6'15" · 有氧巩固</div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="field-row" style="margin-top:20px;">
+        <div class="field-group">
+          <div class="field-label">实际完成总距离 (km)</div>
+          <input type="number" id="f-dist" placeholder="例：18.5" step="0.1">
+        </div>
+        <div class="field-group">
+          <div class="field-label">平均实际配速</div>
+          <input type="text" id="f-pace" placeholder="例：6'25&quot;">
+        </div>
+      </div>
+      <div class="field-group">
+        <div class="field-label">未完成原因（如有）</div>
+        <textarea id="f-miss" placeholder="例：当天加班、腿部酸痛、天气原因…"></textarea>
+      </div>
+    </div>
+    <div class="nav-row" style="padding:0 28px 24px;">
+      <button class="btn btn-back" onclick="goStep(1)">← 返回</button>
+      <button class="btn btn-next" onclick="goStep(3)">下一步 →</button>
+    </div>
+  </div>
+
+  <!-- ══ STEP 3: 身体感受 ══ -->
+  <div class="section-card" id="card-3">
+    <div class="card-header">
+      <div class="card-icon">❤️</div>
+      <div>
+        <div class="card-title">身体感受反馈</div>
+        <div class="card-subtitle">帮助教练了解你的身体适应情况</div>
+      </div>
+    </div>
+    <div class="card-body">
+      <div class="rating-group">
+        <div class="field-label">训练整体疲劳感</div>
+        <div class="star-row" id="stars-fatigue">
+          <div class="star" onclick="rateStar('stars-fatigue',1)" title="很轻松">😊</div>
+          <div class="star" onclick="rateStar('stars-fatigue',2)" title="轻松">🙂</div>
+          <div class="star" onclick="rateStar('stars-fatigue',3)" title="一般">😐</div>
+          <div class="star" onclick="rateStar('stars-fatigue',4)" title="累">😓</div>
+          <div class="star" onclick="rateStar('stars-fatigue',5)" title="非常累">😩</div>
+        </div>
+        <div class="rating-label">1 = 完全不累 · 5 = 非常疲惫</div>
+      </div>
+
+      <div class="rating-group">
+        <div class="field-label">心肺感受（喘气程度）</div>
+        <div class="star-row" id="stars-cardio">
+          <div class="star" onclick="rateStar('stars-cardio',1)">🌬️</div>
+          <div class="star" onclick="rateStar('stars-cardio',2)">💨</div>
+          <div class="star" onclick="rateStar('stars-cardio',3)">🫁</div>
+          <div class="star" onclick="rateStar('stars-cardio',4)">😮‍💨</div>
+          <div class="star" onclick="rateStar('stars-cardio',5)">🫣</div>
+        </div>
+        <div class="rating-label">1 = 呼吸轻松 · 5 = 极度喘气</div>
+      </div>
+
+      <div class="field-group">
+        <div class="field-label">本周最大心率 (bpm，如有记录)</div>
+        <input type="number" id="f-maxhr" placeholder="例：168" min="100" max="220">
+      </div>
+
+      <div class="field-group">
+        <div class="field-label">身体不适或疼痛部位</div>
+        <div class="toggle-chips" id="chips-pain">
+          <div class="toggle-chip" onclick="toggleMulti(this)">无不适 ✅</div>
+          <div class="toggle-chip" onclick="toggleMulti(this)">膝盖</div>
+          <div class="toggle-chip" onclick="toggleMulti(this)">踝关节</div>
+          <div class="toggle-chip" onclick="toggleMulti(this)">小腿</div>
+          <div class="toggle-chip" onclick="toggleMulti(this)">大腿</div>
+          <div class="toggle-chip" onclick="toggleMulti(this)">髋部</div>
+          <div class="toggle-chip" onclick="toggleMulti(this)">背部</div>
+          <div class="toggle-chip" onclick="toggleMulti(this)">其他</div>
+        </div>
+      </div>
+
+      <div class="field-group">
+        <div class="field-label">其他身体备注</div>
+        <textarea id="f-body-note" placeholder="例：左膝偶有轻微酸感，跑完后自行缓解…"></textarea>
+      </div>
+    </div>
+    <div class="nav-row" style="padding:0 28px 24px;">
+      <button class="btn btn-back" onclick="goStep(2)">← 返回</button>
+      <button class="btn btn-next" onclick="goStep(4)">下一步 →</button>
+    </div>
+  </div>
+
+  <!-- ══ STEP 4: 饮食记录 ══ -->
+  <div class="section-card" id="card-4">
+    <div class="card-header">
+      <div class="card-icon">🍽️</div>
+      <div>
+        <div class="card-title">饮食记录</div>
+        <div class="card-subtitle">本周整体饮食情况，诚实填写即可</div>
+      </div>
+    </div>
+    <div class="card-body">
+      <div class="field-group">
+        <div class="field-label">本周碳水控制情况</div>
+        <div class="toggle-chips" id="chips-carb">
+          <div class="toggle-chip" onclick="selectChip(this,'chips-carb')">严格控制</div>
+          <div class="toggle-chip" onclick="selectChip(this,'chips-carb')">基本控制</div>
+          <div class="toggle-chip" onclick="selectChip(this,'chips-carb')">偶有放松</div>
+          <div class="toggle-chip" onclick="selectChip(this,'chips-carb')">没有控制</div>
+        </div>
+      </div>
+
+      <div class="field-group">
+        <div class="field-label">烧烤/油炸食物次数（本周）</div>
+        <div class="slider-wrap">
+          <input type="range" id="slider-bbq" min="0" max="7" value="0" oninput="updateSlider('slider-bbq','val-bbq')">
+          <div class="slider-labels"><span>0 次</span><span>7 次</span></div>
+          <div class="slider-value" id="val-bbq">0 次</div>
+        </div>
+      </div>
+
+      <div class="field-group">
+        <div class="field-label">零食摄入频率</div>
+        <div class="toggle-chips" id="chips-snack">
+          <div class="toggle-chip" onclick="selectChip(this,'chips-snack')">几乎没有</div>
+          <div class="toggle-chip" onclick="selectChip(this,'chips-snack')">1~2次</div>
+          <div class="toggle-chip" onclick="selectChip(this,'chips-snack')">3~4次</div>
+          <div class="toggle-chip" onclick="selectChip(this,'chips-snack')">每天都有</div>
+        </div>
+      </div>
+
+      <div class="field-group">
+        <div class="field-label">训练前是否额外补充碳水？</div>
+        <div class="toggle-chips" id="chips-precarb">
+          <div class="toggle-chip" onclick="selectChip(this,'chips-precarb')">没有</div>
+          <div class="toggle-chip" onclick="selectChip(this,'chips-precarb')">偶尔</div>
+          <div class="toggle-chip" onclick="selectChip(this,'chips-precarb')">每次都有</div>
+        </div>
+      </div>
+
+      <div class="field-group">
+        <div class="field-label">饮食补充说明 / 给教练的话</div>
+        <textarea id="f-diet-note" placeholder="例：本周多吃了两次烧烤，下周会注意；或者有什么想问教练的…" style="min-height:110px;"></textarea>
+      </div>
+    </div>
+    <div class="nav-row" style="padding:0 28px 24px;">
+      <button class="btn btn-back" onclick="goStep(3)">← 返回</button>
+      <button class="btn btn-submit" onclick="submitForm()">✅ 提交反馈</button>
+    </div>
+  </div>
+
+  <!-- ══ SUMMARY PAGE ══ -->
+  <div id="summary-page">
+    <div class="section-card active" style="display:block;">
+      <div class="summary-hero">
+        <div class="summary-check">✅</div>
+        <h2>反馈提交成功！</h2>
+        <p>感谢你的认真填写，以下是本次反馈摘要，截图发给教练即可。</p>
+      </div>
+      <div class="summary-grid" id="summary-grid">
+        <!-- filled by JS -->
+      </div>
+      <div class="print-btn-row">
+        <button class="btn btn-back" onclick="window.print()">🖨️ 打印 / 保存PDF</button>
+        <button class="btn btn-next" onclick="resetForm()">重新填写</button>
+      </div>
+    </div>
+  </div>
+
+</div><!-- end main -->
+
+<div class="page-footer">马拉松训练反馈系统 · 教练专用版 · 2025</div>
+
+<script>
+let currentStep = 1;
+const ratings = { 'stars-fatigue': 0, 'stars-cardio': 0 };
+const checkedSessions = {};
+
+/* ─── STEP NAVIGATION ─── */
+function goStep(n) {
+  // hide all cards
+  for (let i = 1; i <= 4; i++) {
+    document.getElementById('card-' + i).classList.remove('active');
+    const si = document.getElementById('step-' + i);
+    si.classList.remove('active', 'done');
+  }
+  document.getElementById('summary-page').classList.remove('active');
+
+  // update steps
+  for (let i = 1; i <= 4; i++) {
+    const si = document.getElementById('step-' + i);
+    if (i < n) { si.classList.add('done'); }
+    else if (i === n) { si.classList.add('active'); }
+    // lines
+    const li = document.getElementById('line-' + i);
+    if (li) li.classList.toggle('done', i < n);
+  }
+
+  // show card
+  const card = document.getElementById('card-' + n);
+  if (card) card.classList.add('active');
+  currentStep = n;
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+/* ─── CHIP SINGLE SELECT ─── */
+function selectChip(el, groupId) {
+  const group = document.getElementById(groupId);
+  group.querySelectorAll('.toggle-chip').forEach(c => c.classList.remove('selected'));
+  el.classList.add('selected');
+}
+
+/* ─── CHIP MULTI SELECT ─── */
+function toggleMulti(el) { el.classList.toggle('selected'); }
+
+/* ─── STAR RATING ─── */
+function rateStar(groupId, val) {
+  ratings[groupId] = val;
+  const group = document.getElementById(groupId);
+  group.querySelectorAll('.star').forEach((s, i) => {
+    s.classList.toggle('active', i < val);
+  });
+}
+
+/* ─── SESSION CHECK ─── */
+function toggleCheck(id) {
+  const el = document.getElementById(id);
+  const cb = document.getElementById(id.replace('sc-', 'cb-'));
+  const checked = !el.classList.contains('checked');
+  el.classList.toggle('checked', checked);
+  cb.textContent = checked ? '✓' : '';
+  checkedSessions[id] = checked;
+}
+
+/* ─── SLIDER ─── */
+function updateSlider(sliderId, valId) {
+  const v = document.getElementById(sliderId).value;
+  document.getElementById(valId).textContent = v + ' 次';
+}
+
+/* ─── GET CHIP VALUE ─── */
+function getChip(groupId) {
+  const selected = document.querySelectorAll('#' + groupId + ' .toggle-chip.selected');
+  return Array.from(selected).map(s => s.textContent.trim()).join('、') || '未填写';
+}
+
+/* ─── SUBMIT ─── */
+function submitForm() {
+  // mark step 5
+  for (let i = 1; i <= 4; i++) {
+    document.getElementById('card-' + i).classList.remove('active');
+    document.getElementById('step-' + i).classList.remove('active');
+    document.getElementById('step-' + i).classList.add('done');
+    const li = document.getElementById('line-' + i);
+    if (li) li.classList.add('done');
+  }
+  document.getElementById('step-5').classList.add('done');
+
+  // build summary
+  const sessions = [];
+  if (checkedSessions['sc-1']) sessions.push('5/17 慢跑9K');
+  if (checkedSessions['sc-2']) sessions.push('5/19 节奏跑5K');
+  if (checkedSessions['sc-3']) sessions.push('5/31 慢跑7K');
+
+  const fatigueLabels = ['','很轻松','轻松','一般','较累','非常累'];
+  const cardioLabels  = ['','呼吸轻松','轻微喘','有些喘','明显喘','极度喘'];
+
+  const summaryData = [
+    {
+      title: '基本信息',
+      items: [
+        { key:'反馈日期',  val: v('f-date') || '—' },
+        { key:'当前体重',  val: v('f-weight') ? v('f-weight')+'kg' : '—' },
+        { key:'静息心率',  val: v('f-rhr') ? v('f-rhr')+'bpm' : '—' },
+        { key:'睡眠质量',  val: document.getElementById('f-sleep').value || '未填写' },
+        { key:'精力状态',  val: getChip('chips-energy') },
+      ]
+    },
+    {
+      title: '训练完成',
+      items: [
+        { key:'已完成课程', val: sessions.length ? sessions.join(' / ') : '全部未打卡' },
+        { key:'实际总距离', val: v('f-dist') ? v('f-dist')+'km' : '—' },
+        { key:'平均配速',   val: v('f-pace') || '—' },
+        { key:'未完成原因', val: v('f-miss') || '无' },
+      ]
+    },
+    {
+      title: '身体感受',
+      items: [
+        { key:'疲劳感评分',   val: ratings['stars-fatigue'] ? fatigueLabels[ratings['stars-fatigue']]+' ('+ratings['stars-fatigue']+'/5)' : '—' },
+        { key:'心肺喘气感',   val: ratings['stars-cardio'] ? cardioLabels[ratings['stars-cardio']]+' ('+ratings['stars-cardio']+'/5)' : '—' },
+        { key:'最大心率',     val: v('f-maxhr') ? v('f-maxhr')+'bpm' : '—' },
+        { key:'不适部位',     val: getChip('chips-pain') },
+        { key:'身体备注',     val: v('f-body-note') || '无' },
+      ]
+    },
+    {
+      title: '饮食记录',
+      items: [
+        { key:'碳水控制',     val: getChip('chips-carb') },
+        { key:'烧烤次数',     val: document.getElementById('val-bbq').textContent },
+        { key:'零食频率',     val: getChip('chips-snack') },
+        { key:'训练前补碳',   val: getChip('chips-precarb') },
+        { key:'饮食备注',     val: v('f-diet-note') || '无' },
+      ]
+    }
+  ];
+
+  const grid = document.getElementById('summary-grid');
+  grid.innerHTML = '';
+  summaryData.forEach(sec => {
+    const card = document.createElement('div');
+    card.className = 'summary-card';
+    card.innerHTML = `<div class="summary-card-title">${sec.title}</div>` +
+      sec.items.map(i => `<div class="summary-item"><span class="summary-key">${i.key}</span><span class="summary-val">${i.val}</span></div>`).join('');
+    grid.appendChild(card);
+  });
+
+  document.getElementById('summary-page').classList.add('active');
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function v(id) {
+  const el = document.getElementById(id);
+  return el ? el.value.trim() : '';
+}
+
+function resetForm() {
+  location.reload();
+}
+</script>
+</body>
+</html>
