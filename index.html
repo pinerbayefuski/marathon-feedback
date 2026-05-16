@@ -879,18 +879,12 @@ function getChip(groupId) {
 }
 
 /* ─── SUBMIT ─── */
-function submitForm() {
-  // mark step 5
-  for (let i = 1; i <= 4; i++) {
-    document.getElementById('card-' + i).classList.remove('active');
-    document.getElementById('step-' + i).classList.remove('active');
-    document.getElementById('step-' + i).classList.add('done');
-    const li = document.getElementById('line-' + i);
-    if (li) li.classList.add('done');
-  }
-  document.getElementById('step-5').classList.add('done');
+async function submitForm() {
+  const btn = document.querySelector('.btn-submit');
+  btn.textContent = '⏳ 提交中...';
+  btn.disabled = true;
 
-  // build summary
+  // build summary data
   const sessions = [];
   if (checkedSessions['sc-1']) sessions.push('长距离慢跑30K');
   if (checkedSessions['sc-2']) sessions.push('节奏跑15K');
@@ -941,6 +935,63 @@ function submitForm() {
     }
   ];
 
+  // format email body
+  const emailBody = summaryData.map(sec =>
+    `【${sec.title}】\n` + sec.items.map(i => `  ${i.key}：${i.val}`).join('\n')
+  ).join('\n\n');
+
+  // send to Web3Forms
+  try {
+    const res = await fetch('https://api.web3forms.com/submit', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+      body: JSON.stringify({
+        access_key: '5a7cf191-564d-4d10-8179-00797b9189f9',
+        subject: `🏃 训练反馈 · ${v('f-date') || '新反馈'}`,
+        message: emailBody,
+        from_name: '马拉松跑者反馈系统',
+        // individual fields for easy reading
+        '反馈日期': v('f-date') || '—',
+        '当前体重': v('f-weight') ? v('f-weight')+'kg' : '—',
+        '静息心率': v('f-rhr') ? v('f-rhr')+'bpm' : '—',
+        '睡眠质量': document.getElementById('f-sleep').value || '未填写',
+        '精力状态': getChip('chips-energy'),
+        '已完成课程': sessions.length ? sessions.join(' / ') : '全部未打卡',
+        '实际总距离': v('f-dist') ? v('f-dist')+'km' : '—',
+        '平均配速': v('f-pace') || '—',
+        '未完成原因': v('f-miss') || '无',
+        '疲劳感评分': ratings['stars-fatigue'] ? fatigueLabels[ratings['stars-fatigue']]+' ('+ratings['stars-fatigue']+'/5)' : '—',
+        '心肺喘气感': ratings['stars-cardio'] ? cardioLabels[ratings['stars-cardio']]+' ('+ratings['stars-cardio']+'/5)' : '—',
+        '最大心率': v('f-maxhr') ? v('f-maxhr')+'bpm' : '—',
+        '不适部位': getChip('chips-pain'),
+        '身体备注': v('f-body-note') || '无',
+        '碳水控制': getChip('chips-carb'),
+        '烧烤次数': document.getElementById('val-bbq').textContent,
+        '零食频率': getChip('chips-snack'),
+        '训练前补碳': getChip('chips-precarb'),
+        '饮食备注': v('f-diet-note') || '无',
+      })
+    });
+    const data = await res.json();
+    if (!data.success) throw new Error('提交失败');
+  } catch(e) {
+    btn.textContent = '❌ 提交失败，请重试';
+    btn.disabled = false;
+    alert('网络错误，请检查网络连接后重试。');
+    return;
+  }
+
+  // mark steps done
+  for (let i = 1; i <= 4; i++) {
+    document.getElementById('card-' + i).classList.remove('active');
+    document.getElementById('step-' + i).classList.remove('active');
+    document.getElementById('step-' + i).classList.add('done');
+    const li = document.getElementById('line-' + i);
+    if (li) li.classList.add('done');
+  }
+  document.getElementById('step-5').classList.add('done');
+
+  // render summary cards
   const grid = document.getElementById('summary-grid');
   grid.innerHTML = '';
   summaryData.forEach(sec => {
